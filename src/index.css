@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  .rotate-x-180 {
+    transform: rotateX(180deg);
+  }
+}
+
+/* Android touch feel and smoothness */
+html, body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  transition: background-color 0.2s ease;
+}
+
+html.dark, html.dark body {
+  background-color: #000000;
+  color-scheme: dark;
+}
+
+html:not(.dark), html:not(.dark) body {
+  background-color: #f0f6fc;
+  color-scheme: light;
+}
+
+/* Custom scrollbar for dropdowns */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+/* Remove unwanted browser focus outlines and black borders on buttons */
+button, [role="button"] {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus, button:focus-visible, button:active {
+  outline: none !important;
+}

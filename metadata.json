@@ -1,0 +1,6 @@
+{
+  "name": "German A1 Flashcards",
+  "description": "Learn German A1 vocabulary with interactive flashcard modes, touch swipe gestures, and mastery tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
