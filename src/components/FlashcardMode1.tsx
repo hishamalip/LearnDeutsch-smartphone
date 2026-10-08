@@ -33,12 +33,19 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
   isDark,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [prevIndex, setPrevIndex] = useState(currentIndex);
+
+  // Synchronously reset flip state during render when card index changes (prevents 1-frame flash of flipped styles)
+  if (prevIndex !== currentIndex) {
+    setPrevIndex(currentIndex);
+    setIsFlipped(false);
+  }
 
   const currentCard = cards[currentIndex] || null;
   const isCurrentMastered = currentCard ? isMastered(currentCard.id) : false;
   const mainWord = currentCard ? (!isFlipped ? currentCard.german : currentCard.english) : '';
 
-  // Reset flip state when card index changes
+  // Secondary effect backup for flip state reset
   useEffect(() => {
     setIsFlipped(false);
   }, [currentIndex]);
@@ -49,11 +56,13 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
 
   const handleNext = useCallback(() => {
     if (cards.length <= 1) return;
+    setIsFlipped(false);
     onNext();
   }, [cards.length, onNext]);
 
   const handlePrev = useCallback(() => {
     if (cards.length <= 1) return;
+    setIsFlipped(false);
     onPrev();
   }, [cards.length, onPrev]);
 
@@ -244,7 +253,7 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
           <div className="h-28 flex items-center justify-center text-center px-2 shrink-0">
             {currentCard.germanExample || currentCard.englishExample ? (
               <div
-                className={`w-full h-[96px] p-2 sm:p-2.5 rounded-xl border flex flex-col justify-center overflow-hidden transition-colors ${
+                className={`w-full h-[96px] p-2 sm:p-2.5 rounded-xl border flex flex-col justify-center overflow-hidden ${
                   !isFlipped
                     ? isDark
                       ? 'bg-[#141414] border-zinc-800'

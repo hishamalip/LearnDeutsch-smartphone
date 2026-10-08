@@ -114,8 +114,22 @@ export default function App() {
     [masteredIds]
   );
 
-  // Always shuffled cards based on filters
-  const filteredCards = useMemo(() => {
+  // Stable study deck: shuffled on filter/session change, never scrambled on card mastery toggle
+  const [deckCards, setDeckCards] = useState<Flashcard[]>(() => {
+    let result = FLASHCARDS;
+    if (categoryFilter !== 'all') {
+      result = result.filter((card) => card.category === categoryFilter);
+    }
+    if (masteryFilter === 'mastered') {
+      result = result.filter((card) => masteredIds.has(card.id));
+    } else if (masteryFilter === 'unmastered') {
+      result = result.filter((card) => !masteredIds.has(card.id));
+    }
+    return shuffleCards(result);
+  });
+
+  // Re-generate and shuffle deck ONLY when the user changes category or mastery filter
+  useEffect(() => {
     let result = FLASHCARDS;
 
     // Filter by Category
@@ -130,23 +144,21 @@ export default function App() {
       result = result.filter((card) => !masteredIds.has(card.id));
     }
 
-    return shuffleCards(result);
-  }, [categoryFilter, masteryFilter, masteredIds]);
-
-  // Reset index whenever category or mastery filter changes
-  useEffect(() => {
+    setDeckCards(shuffleCards(result));
     setCurrentIndex(0);
+    // Note: masteredIds is intentionally omitted so toggling mastered on a card
+    // keeps the deck order intact and allows smooth previous/next navigation.
   }, [categoryFilter, masteryFilter]);
 
   const handleNextCard = useCallback(() => {
-    if (filteredCards.length <= 1) return;
-    setCurrentIndex((prev) => (prev + 1) % filteredCards.length);
-  }, [filteredCards.length]);
+    if (deckCards.length <= 1) return;
+    setCurrentIndex((prev) => (prev + 1) % deckCards.length);
+  }, [deckCards.length]);
 
   const handlePrevCard = useCallback(() => {
-    if (filteredCards.length <= 1) return;
-    setCurrentIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
-  }, [filteredCards.length]);
+    if (deckCards.length <= 1) return;
+    setCurrentIndex((prev) => (prev - 1 + deckCards.length) % deckCards.length);
+  }, [deckCards.length]);
 
   // Active Category statistics
   const activeCategoryCards = useMemo(() => {
@@ -256,7 +268,7 @@ export default function App() {
             setMasteryFilter={setMasteryFilter}
             masteredCount={activeMasteredCount}
             totalCards={activeCategoryCards.length}
-            filteredCount={filteredCards.length}
+            filteredCount={deckCards.length}
             unmasteredCount={activeUnmasteredCount}
             isDark={isDark}
           />
@@ -264,7 +276,7 @@ export default function App() {
           {/* Flashcard Mode 1 */}
           {currentView === 'mode1' && (
             <FlashcardMode1
-              cards={filteredCards}
+              cards={deckCards}
               currentIndex={currentIndex}
               onNext={handleNextCard}
               onPrev={handlePrevCard}
@@ -277,7 +289,7 @@ export default function App() {
           {/* Flashcard Mode 2 */}
           {currentView === 'mode2' && (
             <FlashcardMode2
-              cards={filteredCards}
+              cards={deckCards}
               currentIndex={currentIndex}
               onNext={handleNextCard}
               onPrev={handlePrevCard}
