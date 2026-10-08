@@ -47,9 +47,16 @@ export const FlashcardMode2: React.FC<FlashcardMode2Props> = ({
 
   const handleToggleCurrentMastered = useCallback(() => {
     if (!currentCard) return;
-    playSuccessSound();
+    const wasMastered = isCurrentMastered;
+    if (!wasMastered) {
+      playSuccessSound();
+    }
     onToggleMastered(currentCard.id);
-  }, [currentCard, onToggleMastered]);
+    // Only advance to the next card when marking as mastered; remain on current card when unmastering
+    if (!wasMastered && cards.length > 1) {
+      handleNext();
+    }
+  }, [currentCard, isCurrentMastered, onToggleMastered, cards.length, handleNext]);
 
   const handleSpeak = useCallback(() => {
     if (!currentCard) return;
@@ -119,28 +126,6 @@ export const FlashcardMode2: React.FC<FlashcardMode2Props> = ({
     );
   }
 
-  // Dark blue (der), dark red (die), dark green (das) badges
-  const getArticleBadge = (article: 'der' | 'die' | 'das' | null) => {
-    if (!article) return null;
-    const styles = isDark
-      ? {
-          der: 'text-blue-400 bg-blue-950/90 border-blue-700/80',
-          die: 'text-red-400 bg-red-950/90 border-red-700/80',
-          das: 'text-emerald-400 bg-emerald-950/90 border-emerald-700/80',
-        }[article]
-      : {
-          der: 'text-blue-950 bg-blue-100 border-blue-300',
-          die: 'text-red-950 bg-red-100 border-red-300',
-          das: 'text-emerald-950 bg-emerald-100 border-emerald-300',
-        }[article];
-
-    return (
-      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${styles}`}>
-        {article}
-      </span>
-    );
-  };
-
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-between p-2.5 sm:p-3.5 select-none overflow-hidden">
       {/* Top Header Card Info */}
@@ -166,25 +151,24 @@ export const FlashcardMode2: React.FC<FlashcardMode2Props> = ({
               : 'bg-white border-sky-100 shadow-xs'
           }`}
         >
+          {/* Top row with status (Fixed height: h-6 -> Exact same top right position as Mode 1) */}
+          <div className="h-6 flex items-center justify-end shrink-0">
+            {isCurrentMastered && (
+              <span
+                className={`text-[11px] font-medium px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                  isDark
+                    ? 'text-emerald-400 bg-zinc-900 border-zinc-800'
+                    : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                }`}
+              >
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Mastered
+              </span>
+            )}
+          </div>
+
           {/* SECTION 1: TOP SECTION -> GERMAN (Fixed Heights for steady layout) */}
           <div className="flex-1 flex flex-col justify-center">
-            {/* Top row with article or mastered badge (Fixed height: h-6) */}
-            <div className="h-6 flex items-center justify-between shrink-0">
-              <div>{getArticleBadge(currentCard.article)}</div>
-              {isCurrentMastered && (
-                <span
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-md border flex items-center gap-1 ${
-                    isDark
-                      ? 'text-emerald-400 bg-zinc-900 border-zinc-800'
-                      : 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                  }`}
-                >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                  Mastered
-                </span>
-              )}
-            </div>
-
             {/* German Word (Fixed height: h-16 -> Steady Position) */}
             <div className="h-16 flex items-center justify-center text-center px-2 shrink-0">
               <h2
@@ -223,9 +207,6 @@ export const FlashcardMode2: React.FC<FlashcardMode2Props> = ({
 
           {/* SECTION 2: BOTTOM SECTION -> ENGLISH (Fixed Heights for steady layout) */}
           <div className="flex-1 flex flex-col justify-center">
-            {/* Blank top spacer (Fixed height: h-6) */}
-            <div className="h-6 shrink-0" />
-
             {/* English Definition (Exact same font & size as German, violet/indigo) */}
             <div className="h-16 flex items-center justify-center text-center px-2 shrink-0">
               <h2

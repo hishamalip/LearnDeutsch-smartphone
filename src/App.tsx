@@ -14,6 +14,14 @@ import { FlashcardMode2 } from './components/FlashcardMode2';
 
 type AppView = 'home' | 'mode1' | 'mode2';
 
+function getViewFromHash(): AppView {
+  if (typeof window === 'undefined') return 'home';
+  const hash = window.location.hash.toLowerCase();
+  if (hash === '#v1' || hash === '#mode1') return 'mode1';
+  if (hash === '#v2' || hash === '#mode2') return 'mode2';
+  return 'home';
+}
+
 function shuffleCards(array: Flashcard[]): Flashcard[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -24,10 +32,60 @@ function shuffleCards(array: Flashcard[]): Flashcard[] {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<AppView>('home');
+  const [currentView, setCurrentView] = useState<AppView>(() => getViewFromHash());
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Sync with browser history (hardware/browser back button)
+  useEffect(() => {
+    const handlePopState = () => {
+      const targetView = getViewFromHash();
+      setCurrentView(targetView);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Ensure initial hash direct-load has a 'home' state behind it so device back returns to home
+  useEffect(() => {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#v1' || hash === '#mode1' || hash === '#v2' || hash === '#mode2') {
+      window.history.replaceState({ view: 'home' }, '', window.location.pathname + window.location.search);
+      window.history.pushState({ view: hash.startsWith('#v2') ? 'mode2' : 'mode1' }, '', hash);
+    }
+  }, []);
+
+  const handleSelectMode = useCallback((mode: 'mode1' | 'mode2') => {
+    const hash = mode === 'mode1' ? '#v1' : '#v2';
+    window.history.pushState({ view: mode }, '', hash);
+    setCurrentView(mode);
+    setCurrentIndex(0);
+  }, []);
+
+  const handleBackToHome = useCallback(() => {
+    setCurrentView('home');
+    if (window.location.hash || (window.history.state && window.history.state.view)) {
+      window.history.back();
+    } else {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  // Escape key returns to Home screen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && currentView !== 'home') {
+        e.preventDefault();
+        handleBackToHome();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentView, handleBackToHome]);
 
   // Theme State: 'light' (Very light blue default) | 'dark' (AMOLED pure black)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -177,10 +235,7 @@ export default function App() {
       {/* View: Home Screen with Level Selector and Options */}
       {currentView === 'home' && (
         <HomeScreen
-          onSelectMode={(mode) => {
-            setCurrentView(mode);
-            setCurrentIndex(0);
-          }}
+          onSelectMode={handleSelectMode}
           masteredCount={masteredIds.size}
           totalCards={FLASHCARDS.length}
           isDark={isDark}
@@ -204,7 +259,7 @@ export default function App() {
                 type="button"
                 onClick={(e) => {
                   e.currentTarget.blur();
-                  setCurrentView('home');
+                  handleBackToHome();
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors active:scale-95 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 ${
                   isDark

@@ -68,9 +68,16 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
 
   const handleToggleCurrentMastered = useCallback(() => {
     if (!currentCard) return;
-    playSuccessSound();
+    const wasMastered = isCurrentMastered;
+    if (!wasMastered) {
+      playSuccessSound();
+    }
     onToggleMastered(currentCard.id);
-  }, [currentCard, onToggleMastered]);
+    // Only advance to the next card when marking as mastered; remain on current card when unmastering
+    if (!wasMastered && cards.length > 1) {
+      handleNext();
+    }
+  }, [currentCard, isCurrentMastered, onToggleMastered, cards.length, handleNext]);
 
   const handleSpeak = useCallback(() => {
     if (!currentCard) return;
@@ -150,28 +157,6 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
     );
   }
 
-  // Dark blue (der), dark red (die), dark green (das) badges
-  const getArticleBadge = (article: 'der' | 'die' | 'das' | null) => {
-    if (!article) return null;
-    const styles = isDark
-      ? {
-          der: 'text-blue-400 bg-blue-950/90 border-blue-700/80',
-          die: 'text-red-400 bg-red-950/90 border-red-700/80',
-          das: 'text-emerald-400 bg-emerald-950/90 border-emerald-700/80',
-        }[article]
-      : {
-          der: 'text-blue-950 bg-blue-100 border-blue-300',
-          die: 'text-red-950 bg-red-100 border-red-300',
-          das: 'text-emerald-950 bg-emerald-100 border-emerald-300',
-        }[article];
-
-    return (
-      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${styles}`}>
-        {article}
-      </span>
-    );
-  };
-
   return (
     <div className="flex-1 min-h-0 flex flex-col justify-between p-2.5 sm:p-3.5 select-none overflow-hidden">
       {/* Top Header Card Info */}
@@ -197,11 +182,8 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
               : 'bg-white border-sky-100 shadow-xs'
           }`}
         >
-          {/* Top row with article or status (Fixed height: h-6) */}
-          <div className="h-6 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-1.5">
-              {getArticleBadge(currentCard.article)}
-            </div>
+          {/* Top row with status (Fixed height: h-6) */}
+          <div className="h-6 flex items-center justify-end shrink-0">
             {isCurrentMastered && (
               <span
                 className={`text-[11px] font-medium px-2 py-0.5 rounded-md border flex items-center gap-1 ${
