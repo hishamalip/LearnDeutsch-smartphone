@@ -200,7 +200,7 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
 
           {/* STEADY WORD SLOT (Fixed height: h-28 -> Word stays in exact steady coordinate) */}
           <div className="h-28 flex flex-col items-center justify-center text-center px-2 shrink-0">
-            {/* Main Word Line - Fixed h-14 slot with locked coordinate & overflow-wrap anywhere */}
+            {/* Main Word Line - Shows article with German word when front, English word when flipped */}
             <div className="h-14 flex items-center justify-center w-full px-1">
               <h2
                 className={`text-2xl font-bold tracking-tight leading-snug break-words [overflow-wrap:anywhere] hyphens-auto text-center line-clamp-2 ${
@@ -213,19 +213,46 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
                     : 'text-indigo-600'
                 }`}
               >
-                {mainWord}
+                {!isFlipped ? (
+                  currentCard.article ? (
+                    <span>
+                      <span
+                        className={`mr-2 ${
+                          currentCard.article === 'der'
+                            ? isDark
+                              ? 'text-blue-400'
+                              : 'text-blue-600'
+                            : currentCard.article === 'die'
+                            ? isDark
+                              ? 'text-rose-400'
+                              : 'text-rose-600'
+                            : isDark
+                            ? 'text-emerald-400'
+                            : 'text-emerald-600'
+                        }`}
+                      >
+                        {currentCard.article}
+                      </span>
+                      {currentCard.german}
+                    </span>
+                  ) : (
+                    currentCard.german
+                  )
+                ) : (
+                  currentCard.english
+                )}
               </h2>
             </div>
 
-            {/* Sub-label slot - Fixed h-5 slot, German word in grey when flipped, invisible placeholder when unflipped */}
+            {/* Sub-label slot - Plural form in small text below German word (only on front side) */}
             <div className="h-5 flex items-center justify-center w-full mt-1 overflow-hidden">
-              {isFlipped ? (
-                <span className="text-xs text-zinc-500 font-medium truncate max-w-full [overflow-wrap:anywhere]">
-                  {currentCard.german}
+              {!isFlipped && currentCard.plural ? (
+                <span className={`text-xs font-medium tracking-wide ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>
+                  Plural: <span className={isDark ? 'text-zinc-200' : 'text-slate-700'}>{currentCard.plural}</span>
                 </span>
               ) : (
                 <span className="text-xs invisible select-none truncate max-w-full" aria-hidden="true">
-                  {currentCard.german}
+                  placeholder
                 </span>
               )}
             </div>
@@ -246,7 +273,7 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
                 }`}
               >
                 {!isFlipped ? (
-                  /* Single German Sentence: Uses full box space so single long sentences are completely visible */
+                  /* Single German Sentence: Uses full box space */
                   <div className="w-full h-full flex items-center justify-center overflow-y-auto px-1 py-0.5">
                     <p
                       className={`text-sm sm:text-[15px] font-medium leading-snug break-words [overflow-wrap:anywhere] text-center ${
@@ -257,24 +284,15 @@ export const FlashcardMode1: React.FC<FlashcardMode1Props> = ({
                     </p>
                   </div>
                 ) : (
-                  /* Flipped State: English sentence primary + German sentence secondary below */
-                  <div className="w-full h-full flex flex-col items-center justify-center overflow-y-auto px-1 py-0.5">
-                    <div className="w-full flex items-center justify-center">
-                      <p
-                        className={`text-sm sm:text-[15px] font-medium leading-snug break-words [overflow-wrap:anywhere] text-center ${
-                          isDark ? 'text-violet-200' : 'text-indigo-950'
-                        }`}
-                      >
-                        {currentCard.englishExample || currentCard.germanExample}
-                      </p>
-                    </div>
-                    {currentCard.germanExample && (
-                      <div className="w-full mt-1 flex items-center justify-center">
-                        <p className="text-xs text-zinc-500 font-normal leading-tight break-words [overflow-wrap:anywhere] text-center">
-                          {currentCard.germanExample}
-                        </p>
-                      </div>
-                    )}
+                  /* Flipped State: Pure English sentence ONLY - No German repetition */
+                  <div className="w-full h-full flex items-center justify-center overflow-y-auto px-1 py-0.5">
+                    <p
+                      className={`text-sm sm:text-[15px] font-medium leading-snug break-words [overflow-wrap:anywhere] text-center ${
+                        isDark ? 'text-violet-200' : 'text-indigo-950'
+                      }`}
+                    >
+                      {currentCard.englishExample || currentCard.english}
+                    </p>
                   </div>
                 )}
               </div>

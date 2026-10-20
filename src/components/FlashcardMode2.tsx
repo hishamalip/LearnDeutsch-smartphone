@@ -170,14 +170,42 @@ export const FlashcardMode2: React.FC<FlashcardMode2Props> = ({
           {/* SECTION 1: TOP SECTION -> GERMAN (Fixed Heights for steady layout) */}
           <div className="flex-1 flex flex-col justify-center">
             {/* German Word (Fixed height: h-16 -> Steady Position) */}
-            <div className="h-16 flex items-center justify-center text-center px-2 shrink-0">
+            <div className="h-16 flex flex-col items-center justify-center text-center px-2 shrink-0">
               <h2
-                className={`text-2xl font-bold tracking-tight leading-snug line-clamp-2 break-words [overflow-wrap:anywhere] hyphens-auto ${
+                className={`text-2xl font-bold tracking-tight leading-snug line-clamp-1 break-words [overflow-wrap:anywhere] hyphens-auto ${
                   isDark ? 'text-white' : 'text-slate-900'
                 }`}
               >
-                {currentCard.german}
+                {currentCard.article ? (
+                  <span>
+                    <span
+                      className={`mr-2 ${
+                        currentCard.article === 'der'
+                          ? isDark
+                            ? 'text-blue-400'
+                            : 'text-blue-600'
+                          : currentCard.article === 'die'
+                          ? isDark
+                            ? 'text-rose-400'
+                            : 'text-rose-600'
+                          : isDark
+                          ? 'text-emerald-400'
+                          : 'text-emerald-600'
+                      }`}
+                    >
+                      {currentCard.article}
+                    </span>
+                    {currentCard.german}
+                  </span>
+                ) : (
+                  currentCard.german
+                )}
               </h2>
+              {currentCard.plural && (
+                <span className={`text-[11px] font-medium tracking-wide mt-0.5 ${isDark ? 'text-zinc-400' : 'text-slate-500'}`}>
+                  Plural: <span className={isDark ? 'text-zinc-200' : 'text-slate-700'}>{currentCard.plural}</span>
+                </span>
+              )}
             </div>
 
             {/* German Sentence (Fixed height: h-14 -> Steady Position) */}
